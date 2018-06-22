@@ -53,6 +53,7 @@ class MakeQRCodeViewController: UIViewController {
 
         self.contextImageView.image = newImage!
     }
+
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         self.contentTextField.resignFirstResponder()
     }

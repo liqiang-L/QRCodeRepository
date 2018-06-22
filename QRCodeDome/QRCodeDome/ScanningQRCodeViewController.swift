@@ -17,20 +17,22 @@ class ScanningQRCodeViewController: UIViewController ,AVCaptureMetadataOutputObj
     override func viewDidLoad() {
         super.viewDidLoad()
         do{
-
             let device = AVCaptureDevice.default(for: AVMediaType.video)
-
-            session.canSetSessionPreset(UIScreen.main.bounds.size.height < 500 ? AVCaptureSession.Preset.vga640x480:AVCaptureSession.Preset.high)
-
+            if UIScreen.main.bounds.size.height < 500{
+                session.sessionPreset = .vga640x480
+            }else{
+                session.sessionPreset = .high
+            }
             let input: AVCaptureDeviceInput = try AVCaptureDeviceInput.init(device:device!)
             session.addInput(input)
-
             let output = AVCaptureMetadataOutput()
             session.addOutput(output)
 
             let windowSize = self.view.bounds.size
             let scanSize = CGSize(width:windowSize.width/2.0,height:windowSize.width/2.0)
+
             let scanRect = CGRect(x:(windowSize.width - scanSize.width)/2.0,y:(windowSize.height - scanSize.height)/2.0,width:scanSize.width,height:scanSize.height)
+
             output.rectOfInterest = CGRect(x:scanRect.minY/windowSize.height, y:scanRect.minX/windowSize.width , width:scanRect.height/windowSize.height, height: scanRect.width/windowSize.width )
 
             output.setMetadataObjectsDelegate(self, queue:DispatchQueue.main)
@@ -38,8 +40,12 @@ class ScanningQRCodeViewController: UIViewController ,AVCaptureMetadataOutputObj
 
             let previewLayer = AVCaptureVideoPreviewLayer(session:session)
             previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-            previewLayer.frame = UIScreen.main.bounds
-            self.view.layer.addSublayer(previewLayer)
+            previewLayer.frame = self.view.bounds
+//            self.view.layer.addSublayer(previewLayer)
+
+            let view = UIView(frame: self.view.bounds)
+            view.layer.addSublayer(previewLayer)
+            self.view.addSubview(view)
 
             let scranView = UIView(frame: scanRect)
             self.view.addSubview(scranView)
@@ -51,6 +57,9 @@ class ScanningQRCodeViewController: UIViewController ,AVCaptureMetadataOutputObj
         } catch{
             print(error)
         }
+    }
+    deinit {
+        session.stopRunning()
     }
 
     override func didReceiveMemoryWarning() {
@@ -64,6 +73,8 @@ class ScanningQRCodeViewController: UIViewController ,AVCaptureMetadataOutputObj
             self.session.stopRunning()
             let obj :AVMetadataMachineReadableCodeObject = metadataObjects.first as! AVMetadataMachineReadableCodeObject
             let alertview:UIAlertController = UIAlertController.init(title:"title", message: obj.stringValue, preferredStyle: UIAlertControllerStyle.alert)
+            print("输出" + obj.stringValue!)
+
             let sureAction = UIAlertAction.init(title: "sure", style: .default, handler: { show in
                 self.session.startRunning()
                 print("输出" + obj.stringValue!)
@@ -71,6 +82,7 @@ class ScanningQRCodeViewController: UIViewController ,AVCaptureMetadataOutputObj
             alertview.addAction(sureAction)
             self.navigationController?.present(alertview, animated: true, completion: nil)
         }
+
     }
 
     override var shouldAutorotate: Bool{
